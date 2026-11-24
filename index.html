@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Muscu</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#e8590c" />
+    <style>
+      :root {
+        --bg: #f6f6f3;
+        --card: #fff;
+        --tx: #1b1b1a;
+        --mu: #7a7a74;
+        --ac: #e8590c;
+        --bd: #e3e3dd;
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #141413;
+          --card: #201f1e;
+          --tx: #f0efea;
+          --mu: #9a9a92;
+          --bd: #34332f;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #141413;
+        --card: #201f1e;
+        --tx: #f0efea;
+        --mu: #9a9a92;
+        --bd: #34332f;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--tx);
+        font:
+          16px system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      #app {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 12px 12px 40px;
+      }
+      h1 {
+        margin: 4px 0 10px;
+        font-size: 22px;
+      }
+      h3 {
+        margin: 14px 0 6px;
+        color: var(--ac);
+      }
+      nav {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      nav button {
+        flex: 1;
+        padding: 8px 2px;
+        font-size: 14px;
+      }
+      nav button.on {
+        background: var(--ac);
+        color: #fff;
+        border-color: var(--ac);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .tap {
+        cursor: pointer;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .row > * {
+        flex: 1;
+        min-width: 0;
+      }
+      .hd {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .mu {
+        color: var(--mu);
+        font-size: 13px;
+      }
+      input,
+      select,
+      button,
+      textarea {
+        font: inherit;
+        color: var(--tx);
+        background: var(--bg);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        padding: 8px;
+        width: 100%;
+      }
+      button {
+        cursor: pointer;
+        width: auto;
+      }
+      button.pri {
+        background: var(--ac);
+        color: #fff;
+        border-color: var(--ac);
+      }
+      button.g {
+        background: none;
+        border: none;
+        padding: 4px 6px;
+        opacity: 0.6;
+        font-size: 13px;
+      }
+      button.g.on {
+        opacity: 1;
+      }
+      .set {
+        display: grid;
+        grid-template-columns: 30px 1fr 12px 1fr 52px;
+        gap: 6px;
+        align-items: center;
+      }
+      .set.pu {
+        opacity: 0.85;
+      }
+      .fm {
+        display: flex;
+        justify-content: flex-end;
+        flex: 0 0 auto;
+      }
+      .ln {
+        padding: 4px 0;
+        border-top: 1px solid var(--bd);
+      }
+      .chip {
+        display: inline-block;
+        background: var(--bg);
+        border: 1px solid var(--bd);
+        border-radius: 99px;
+        padding: 2px 9px;
+        font-size: 13px;
+        margin: 2px 4px 0 0;
+      }
+      #md {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #0008;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 9;
+      }
+      #md .card {
+        width: 100%;
+        max-width: 360px;
+        margin: 0;
+      }
+      .hdl {
+        touch-action: none;
+        cursor: grab;
+        font-size: 18px;
+        opacity: 0.8;
+      }
+      .t {
+        fill: var(--mu);
+        font-size: 10px;
+      }
+      label.ck {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 14px;
+      }
+      label.ck input {
+        width: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>💪 Muscu</h1>
+      <nav>
+        <button data-t="s" onclick="go('s')">Séance</button
+        ><button data-t="f" onclick="go('f')">Fil</button
+        ><button data-t="r" onclick="go('r')">Records</button
+        ><button data-t="p" onclick="go('p')">Progrès</button>
+      </nav>
+      <main id="v"><p class="mu">Chargement…</p></main>
+    </div>
+    <div id="md"></div>
+    <script>
+      /*
+        Muscu Tracker : vue d'ensemble du code
+        - S : état de l'application (exercices, séances types, historique, séance en cours)
+        - K : clé de stockage dans localStorage
+        - init() et save() : chargement et sauvegarde des données
+        - render() affiche l'onglet courant : vS (Séance), vF (Fil), vR (Records),
+          vP (Progrès) et vD (détail d'une séance)
+      */
+      const K = "muscu_v2",
+        $ = (s) => document.querySelector(s),
+        esc = (s) =>
+          String(s).replace(
+            /[&<>"]/g,
+            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+          );
+      const F = ["😣", "😐", "💪"],
+        today = () => new Date().toISOString().slice(0, 10),
+        fd = (d) => d.slice(8) + "/" + d.slice(5, 7),
+        nf = (n) => (Math.round(n * 10) / 10).toLocaleString("fr-FR"),
+        fw = (w) => (+w === 0 ? "PDC" : nf(w)),
+        wk = (w) => (+w === 0 ? "PDC" : nf(w) + " kg"),
+        cl = (o) => JSON.parse(JSON.stringify(o));
+      const fl = (d) =>
+        new Date(d + "T12:00").toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        });
+      let S = { pt: [], ex: { Pecs: ["DC haltères"] }, tpl: [], s: [], cur: null },
+        ready = false,
+        tab = "s",
+        det = 0,
+        selM = "",
+        px = "",
+        pm = "w";
+      // Charge les données depuis localStorage au démarrage
+      function init() {
+        try {
+          const l = JSON.parse(localStorage.getItem(K));
+          if (l) S = l;
+        } catch (e) {}
+        ready = true;
+        render();
+      }
+      // Enregistre l'état complet dans localStorage
+      function save() {
+        S.t = Date.now();
+        try {
+          localStorage.setItem(K, JSON.stringify(S));
+        } catch (e) {}
+      }
+
+      let mcb;
+      function ask(m, d, cb) {
+        const e = $("#md");
+        e.innerHTML = `<div class="card"><b>${esc(m)}</b>${d === null ? "" : `<input id="mi" value="${esc(d || "")}" onkeydown="if(event.key=='Enter')md1()">`}<div class="row"><button onclick="md0()">Annuler</button><button class="pri" onclick="md1()">OK</button></div></div>`;
+        e.style.display = "flex";
+        mcb = cb;
+        const i = $("#mi");
+        if (i) i.focus();
+      }
+      function md0() {
+        $("#md").style.display = "none";
+      }
+      function md1() {
+        const i = $("#mi"),
+          v = i ? i.value.trim() : true;
+        md0();
+        mcb(v);
+      }
+      let dg = null;
+      function dstart(e) {
+        e.preventDefault();
+        const c = e.currentTarget.closest(".gc");
+        e.currentTarget.setPointerCapture(e.pointerId);
+        dg = { c, y0: e.clientY, s0: scrollY };
+        c.style.position = "relative";
+        c.style.zIndex = 5;
+        c.style.outline = "2px solid var(--ac)";
+        c.style.opacity = 0.85;
+      }
+      function dmove(e) {
+        if (!dg) return;
+        if (e.clientY < 80) scrollBy(0, -14);
+        else if (e.clientY > innerHeight - 80) scrollBy(0, 14);
+        dg.c.style.transform = "translateY(" + (e.clientY - dg.y0 + scrollY - dg.s0) + "px)";
+      }
+      function dend() {
+        if (!dg) return;
+        const c = dg.c;
+        dg = null;
+        const cs = [...document.querySelectorAll(".gc")],
+          r = c.getBoundingClientRect(),
+          m = r.top + r.height / 2,
+          i = cs.indexOf(c),
+          k = cs.filter((x) => {
+            const q = x.getBoundingClientRect();
+            return x !== c && q.top + q.height / 2 < m;
+          }).length,
+          G = grp(S.cur.x),
+          x = S.cur.x,
+          id = G.map((_, j) => j);
+        id.splice(i, 1);
+        id.splice(k, 0, i);
+        S.cur.x = id.flatMap((g) => G[g].map((q) => x[q]));
+        save(1);
+        render();
+      }
+      function mvG(i, d) {
+        const G = grp(S.cur.x),
+          x = S.cur.x,
+          a = G.findIndex((g) => g.includes(i)),
+          b = a + d;
+        if (b < 0 || b >= G.length) return;
+        [G[a], G[b]] = [G[b], G[a]];
+        S.cur.x = G.flatMap((g) => g.map((q) => x[q]));
+        save(1);
+        render();
+      }
+      function edit(id) {
+        const s = S.s.find((o) => o.id == id);
+        if (!s) return;
+        if (S.cur && !S.cur.eid && S.cur.x.length) S.park = S.cur;
+        S.cur = cl(s);
+        S.cur.eid = id;
+        det = 0;
+        tab = "s";
+        save(1);
+        render();
+      }
+      function cancelE() {
+        S.cur = S.park || null;
+        delete S.park;
+        tab = "f";
+        save(1);
+        render();
+      }
+      const go = (t) => {
+        tab = t;
+        det = 0;
+        render();
+      };
+      // Affiche l'onglet courant
+      function render() {
+        if (!ready) return;
+        document
+          .querySelectorAll("nav button")
+          .forEach((b) => b.classList.toggle("on", b.dataset.t == tab));
+        det ? vD() : { s: vS, f: vF, r: vR, p: vP }[tab]();
+      }
+      const mainS = (a) => a.sets.filter((t) => !t.wu && t.r !== "" && t.w !== "" && +t.r > 0),
+        pu = (t) => t.w2 !== undefined && t.w2 !== "",
+        vol = (a) =>
+          a.sets
+            .filter((t) => !t.wu && t.r !== "")
+            .reduce(
+              (q, t) => q + Math.max(+t.w || 0, 0) * t.r + (pu(t) ? Math.max(+t.w2, 0) * t.r2 : 0),
+              0,
+            ),
+        fmt = (ss) =>
+          ss
+            .filter((t) => !t.wu && t.r !== "")
+            .map((t) => fw(t.w) + "×" + t.r + (pu(t) ? " puis " + fw(t.w2) + "×" + t.r2 : ""))
+            .join(" · ");
+      function last(x) {
+        for (let i = S.s.length - 1; i >= 0; i--) {
+          if (S.cur && S.s[i].id == S.cur.eid) continue;
+          const it = S.s[i].x.find((a) => a.x == x);
+          if (it) return it;
+        }
+      }
+      function grp(x) {
+        const o = [];
+        x.forEach((a, i) => {
+          const l = o[o.length - 1];
+          if (a.g && l && x[l[0]].g == a.g) l.push(i);
+          else o.push([i]);
+        });
+        return o;
+      }
+      function pushX(x, g, bl) {
+        const l = last(x);
+        S.cur.x.push({
+          x,
+          g: g || 0,
+          f: 0,
+          sets: bl
+            ? Array.from({ length: Math.max(1, l ? mainS(l).length : 1) }, () => ({ w: "", r: "" }))
+            : l && mainS(l).length
+              ? mainS(l).map((s) => {
+                  const o = { w: s.w, r: s.r };
+                  if (pu(s)) {
+                    o.w2 = s.w2;
+                    o.r2 = s.r2;
+                  }
+                  return o;
+                })
+              : [{ w: "", r: "" }],
+        });
+      }
+      // Onglet Séance : saisie de la séance en cours
+      function vS() {
+        const c = S.cur || (S.cur = { d: today(), n: "", p: "", x: [] }),
+          ms = Object.keys(S.ex);
+        if (!selM || !S.ex[selM]) selM = ms[0];
+        $("#v").innerHTML =
+          `${c.eid ? '<div class="card"><b>✏️ Modification de la séance du ' + fd(c.d) + "</b></div>" : ""}<div class="card"><div class="row"><input type="date" value="${c.d}" onchange="S.cur.d=this.value;save()"><input placeholder="Nom (ex : Pecs / Triceps)" value="${esc(c.n)}" oninput="S.cur.n=this.value;save()"></div>
+<input list="pl" placeholder="Avec qui ?" value="${esc(c.p)}" oninput="S.cur.p=this.value;save()"><datalist id="pl">${[...new Set([...S.pt, ...S.s.flatMap((s) => s.p.split(",").map((x) => x.trim()))].filter(Boolean))].map((p) => `<option>${esc(p)}</option>`).join("")}</datalist>
+<select onchange="loadT(this.value)"><option value="">Charger une séance type…</option>${S.tpl.map((t, i) => `<option value="${i}">${esc(t.n)}</option>`).join("")}</select></div>
+${grp(c.x)
+  .map((ix, gi) => card(ix, c.x, gi))
+  .join("")}
+<div class="card"><div class="row"><select id="m" onchange="fillX()">${ms.map((m) => `<option${m == selM ? " selected" : ""}>${esc(m)}</option>`).join("")}<option value="+">➕ Nouveau muscle…</option></select><select id="e"></select></div>${c.x.length ? '<label class="ck"><input type="checkbox" id="lk"> En biset avec l’exo précédent</label>' : ""}<button class="pri" onclick="addSel()">Ajouter l’exercice</button></div>
+${c.eid ? `<div class="row"><button onclick="cancelE()">Annuler</button><button class="pri" onclick="fin()">Enregistrer les modifications</button></div>` : `<div class="row"><button onclick="saveT()">Enregistrer comme séance type</button><button class="pri" onclick="fin()">Terminer la séance</button></div>`}`;
+        fillX();
+      }
+      function fillX() {
+        const m = $("#m");
+        if (m.value == "+") {
+          m.value = selM;
+          ask("Nom du nouveau muscle ?", "", (n) => {
+            if (n && !S.ex[n]) {
+              S.ex[n] = [];
+              selM = n;
+              save();
+            }
+            render();
+          });
+        }
+        selM = m.value;
+        $("#e").innerHTML =
+          (S.ex[selM] || []).map((e) => `<option>${esc(e)}</option>`).join("") +
+          '<option value="+">➕ Nouvel exercice…</option>';
+      }
+      function addSel() {
+        const m = $("#m").value,
+          e = $("#e").value,
+          k = $("#lk"),
+          lk = k && k.checked,
+          go = (n) => {
+            const c = S.cur;
+            let g = 0;
+            if (lk && c.x.length) {
+              const p = c.x[c.x.length - 1];
+              g = p.g || (p.g = Math.max(0, ...c.x.map((a) => a.g || 0)) + 1);
+            }
+            pushX(n, g);
+            save(1);
+            render();
+          };
+        if (e == "+")
+          ask("Nom du nouvel exercice ?", "", (n) => {
+            if (!n) return;
+            (S.ex[m] = S.ex[m] || []).push(n);
+            go(n);
+          });
+        else go(e);
+      }
+      function card(ix, x, gi) {
+        const n = Math.max(...ix.map((i) => x[i].sets.length)),
+          b = ix.length > 1,
+          R = recs();
+        return `<div class="card gc" data-gi="${gi}"><div class="hd"><span>${ix.map((i) => `<b>${esc(x[i].x)}</b>${R[x[i].x] ? ` <span class="mu">🏆 ${wk(R[x[i].x].w.w)} × ${R[x[i].x].w.r}</span>` : ""}`).join(" + ")}</span><span><button class="g" onclick="mvG(${ix[0]},-1)">▲</button><button class="g" onclick="mvG(${ix[0]},1)">▼</button><button class="g hdl" onpointerdown="dstart(event)" onpointermove="dmove(event)" onpointerup="dend()" onpointercancel="dend()">⠿</button><button class="g" onclick="rmG(${ix[0]})">✕</button></span></div>
+${ix
+  .map((i) => {
+    const l = last(x[i].x);
+    return l && mainS(l).length
+      ? `<div class="mu">${b ? esc(x[i].x) + " · " : ""}dernière fois : ${fmt(l.sets)}</div>`
+      : "";
+  })
+  .join("")}
+${Array.from({ length: n }, (_, j) => ix.map((i, k) => (x[i].sets[j] ? row(i, j, x[i].sets[j], b ? j + 1 + "ab"[k] : j + 1) : "")).join("")).join("")}
+<div class="row"><button onclick="addSet(${ix[0]})">+ Série</button><button onclick="delSet(${ix[0]})">− Série</button><span class="fm">${F.map((e, k) => `<button class="g${x[ix[0]].f == k + 1 ? " on" : ""}" onclick="fm(${ix[0]},${k + 1})">${e}</button>`).join("")}</span></div></div>`;
+      }
+      const inp = (i, j, k, ph, v) =>
+        `<input type="number" inputmode="decimal" step="any" placeholder="${ph}" value="${v}" oninput="st(${i},${j},'${k}',this.value)">`;
+      const row = (i, j, s, l) =>
+        `<div class="set"><span class="mu">${s.wu ? "éch" : l}</span>${inp(i, j, "w", "kg", s.w)}<span>×</span>${inp(i, j, "r", "reps", s.r)}<button class="g" onclick="tp(${i},${j})">${s.w2 === undefined ? "+ puis" : "puis ✕"}</button></div>` +
+        (s.w2 === undefined
+          ? ""
+          : `<div class="set pu"><span class="mu">puis</span>${inp(i, j, "w2", "kg", s.w2)}<span>×</span>${inp(i, j, "r2", "reps", s.r2)}<span></span></div>`);
+      const st = (i, j, k, v) => {
+          S.cur.x[i].sets[j][k] = v;
+          save();
+        },
+        G = (i) => grp(S.cur.x).find((g) => g.includes(i));
+      function tp(i, j) {
+        const s = S.cur.x[i].sets[j];
+        if (s.w2 === undefined) {
+          s.w2 = "";
+          s.r2 = "";
+        } else {
+          delete s.w2;
+          delete s.r2;
+        }
+        save();
+        render();
+      }
+      function addSet(i) {
+        G(i).forEach((k) => {
+          const a = S.cur.x[k],
+            p = a.sets[a.sets.length - 1] || { w: "", r: "" };
+          a.sets.push({ w: p.w, r: p.r });
+        });
+        save();
+        render();
+      }
+      function delSet(i) {
+        G(i).forEach((k) => S.cur.x[k].sets.pop());
+        save();
+        render();
+      }
+      function rmG(i) {
+        const g = G(i);
+        S.cur.x = S.cur.x.filter((_, k) => !g.includes(k));
+        save(1);
+        render();
+      }
+      function fm(i, v) {
+        const f = S.cur.x[i].f == v ? 0 : v;
+        G(i).forEach((k) => (S.cur.x[k].f = f));
+        save();
+        render();
+      }
+      // Charge une séance type dans la séance en cours
+      function loadT(i) {
+        if (i === "") return;
+        const t = S.tpl[i],
+          gm = {};
+        let b = Math.max(0, ...S.cur.x.map((a) => a.g || 0));
+        if (!S.cur.n) S.cur.n = t.n;
+        t.e.forEach(([x, g]) => {
+          if (g && !gm[g]) gm[g] = ++b;
+          pushX(x, g ? gm[g] : 0, 1);
+        });
+        save(1);
+        render();
+      }
+      function saveT() {
+        if (!S.cur.x.length) return ask("Ajoute d’abord des exercices.", null, () => {});
+        ask("Nom de la séance type ?", S.cur.n, (n) => {
+          if (!n) return;
+          const gm = {};
+          S.tpl.push({
+            n,
+            e: S.cur.x.map((a) => [
+              a.x,
+              a.g ? (gm[a.g] = gm[a.g] || Object.keys(gm).length + 1) : 0,
+            ]),
+          });
+          save();
+          render();
+        });
+      }
+      // Termine la séance : retire les séries vides puis enregistre
+      function fin() {
+        const c = S.cur,
+          x = c.x
+            .map((a) => ({ ...a, sets: a.sets.filter((s) => s.w !== "" && (s.r !== "" || s.wu)) }))
+            .filter((a) => a.sets.length);
+        if (!x.length)
+          return ask("Rien à enregistrer : remplis au moins une série.", null, () => {});
+        c.x = x;
+        const e = c.eid;
+        if (e) {
+          delete c.eid;
+          c.id = e;
+          S.s = S.s.filter((o) => o.id != e);
+        } else c.id = Date.now();
+        if (!c.n) c.n = c.x[0].x;
+        S.s.push(c);
+        S.s.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : a.id - b.id));
+        S.cur = S.park || null;
+        delete S.park;
+        tab = "f";
+        det = e || 0;
+        save(1);
+        render();
+      }
+      function prog(s, a) {
+        const m = mainS(a);
+        if (!m.length) return 0;
+        const P = [];
+        S.s.forEach((o) => {
+          if (o.d < s.d || (o.d == s.d && o.id < s.id))
+            o.x.forEach((c) => {
+              if (c.x == a.x) P.push(...mainS(c));
+            });
+        });
+        return P.length > 0 && m.some((t) => !P.some((p) => +p.w >= +t.w && +p.r >= +t.r));
+      }
+      const prs = (s) => s.x.filter((a) => prog(s, a)).length;
+      const chips = (s) => {
+        const p = prs(s);
+        return `<span class="chip">${s.x.length} exos</span><span class="chip">${s.x.reduce((q, a) => q + a.sets.filter((t) => !t.wu).length, 0)} séries</span><span class="chip">${nf(s.x.reduce((q, a) => q + vol(a), 0))} kg</span><span class="chip">📈 ${p} progrès</span>`;
+      };
+      // Onglet Fil : historique des séances
+      function vF() {
+        $("#v").innerHTML = S.s.length
+          ? S.s
+              .slice()
+              .reverse()
+              .map(
+                (s) =>
+                  `<div class="card tap" onclick="det=${s.id};render()"><div class="hd"><b>${esc(s.n)}</b><span class="mu">${fl(s.d)}</span></div>${s.p ? `<div class="mu">avec ${esc(s.p)}</div>` : ""}<div>${chips(s)}</div><div class="mu">${[...new Set(s.x.map((a) => a.x))].map(esc).join(" · ")}</div></div>`,
+              )
+              .join("")
+          : '<p class="mu">Aucune séance pour l’instant.</p>';
+      }
+      // Détail d'une séance de l'historique
+      function vD() {
+        const s = S.s.find((o) => o.id == det);
+        if (!s) {
+          det = 0;
+          return render();
+        }
+        $("#v").innerHTML =
+          `<button onclick="det=0;render()">← Fil</button><div class="card"><b style="font-size:18px">${esc(s.n)}</b><div class="mu">${fl(s.d)}${s.p ? " · avec " + esc(s.p) : ""}</div><div>${chips(s)}</div></div>${grp(
+            s.x,
+          )
+            .map(
+              (ix) =>
+                `<div class="card"><b>${ix.map((i) => esc(s.x[i].x) + (prog(s, s.x[i]) ? " 📈" : "")).join(" + ")}</b>${ix
+                  .map((i) => {
+                    const a = s.x[i];
+                    return `<div class="ln">${ix.length > 1 ? '<span class="mu">' + esc(a.x) + "</span><br>" : ""}${a.sets.map((t) => (t.wu ? '<span class="mu">éch. </span>' : "") + (t.r === "" ? fw(t.w) : fw(t.w) + "×" + t.r) + (pu(t) ? ` <span class="mu">puis ${fw(t.w2)}×${t.r2}</span>` : "")).join(" · ")}${a.f ? " " + F[a.f - 1] : ""}${a.n ? `<br><span class="mu">${esc(a.n)}</span>` : ""}</div>`;
+                  })
+                  .join("")}</div>`,
+            )
+            .join(
+              "",
+            )}<div class="row"><button onclick="edit(${s.id})">✏️ Modifier</button><button onclick="redo(${s.id})">Refaire</button><button onclick="del(${s.id})">🗑 Supprimer</button></div>`;
+      }
+      function del(id) {
+        ask("Supprimer cette séance ?", null, () => {
+          S.s = S.s.filter((s) => s.id != id);
+          det = 0;
+          save();
+          render();
+        });
+      }
+      function redo(id) {
+        if (S.cur && S.cur.x.length && !window._ok)
+          return ask("Remplacer la séance en cours ?", null, () => {
+            window._ok = 1;
+            redo(id);
+            window._ok = 0;
+          });
+        const s = S.s.find((o) => o.id == id);
+        S.cur = {
+          d: today(),
+          n: s.n,
+          p: "",
+          x: s.x.map((a) => ({
+            x: a.x,
+            g: a.g || 0,
+            f: 0,
+            sets: Array.from({ length: Math.max(1, a.sets.filter((t) => !t.wu).length) }, () => ({
+              w: "",
+              r: "",
+            })),
+          })),
+        };
+        det = 0;
+        tab = "s";
+        save();
+        render();
+      }
+      function recs() {
+        const R = {};
+        S.s.forEach((s) =>
+          s.x.forEach((a) => {
+            const m = mainS(a);
+            if (!m.length) return;
+            const r = R[a.x] || (R[a.x] = {});
+            m.forEach((t) => {
+              const w = +t.w,
+                e = w > 0 ? w * (1 + t.r / 30) : 0;
+              if (!r.w || w > r.w.w || (w == r.w.w && t.r > r.w.r)) r.w = { w, r: +t.r, d: s.d };
+              if (e && (!r.e || e > r.e.v)) r.e = { v: e, w, r: +t.r, d: s.d };
+            });
+            const v = vol(a);
+            if (!r.v || v > r.v.v) r.v = { v, d: s.d };
+          }),
+        );
+        return R;
+      }
+      // Onglet Records
+      function vR() {
+        const R = recs();
+        let h = "";
+        Object.keys(S.ex).forEach((m) => {
+          const l = S.ex[m].filter((x) => R[x]);
+          if (!l.length) return;
+          h +=
+            `<h3>${esc(m)}</h3>` +
+            l
+              .map((x) => {
+                const r = R[x];
+                return `<div class="card"><b>${esc(x)}</b><div>🏆 ${wk(r.w.w)} × ${r.w.r} <span class="mu">· ${fd(r.w.d)}</span></div>${r.e ? `<div>1RM estimé : ${nf(r.e.v)} kg <span class="mu">(${nf(r.e.w)}×${r.e.r}, ${fd(r.e.d)})</span></div>` : ""}<div class="mu">Meilleur volume : ${nf(r.v.v)} kg · ${fd(r.v.d)}</div></div>`;
+              })
+              .join("");
+        });
+        $("#v").innerHTML = h || '<p class="mu">Pas encore de données.</p>';
+      }
+      // Onglet Progrès : courbes par exercice
+      function vP() {
+        const xs = [...new Set(S.s.flatMap((s) => s.x.map((a) => a.x)))];
+        if (!xs.length) {
+          $("#v").innerHTML = '<p class="mu">Enregistre une séance pour voir tes courbes.</p>';
+          return;
+        }
+        if (!xs.includes(px)) px = xs[0];
+        const pts = S.s
+          .map((s) => {
+            const a = s.x.find((a) => a.x == px);
+            if (!a) return;
+            const m = mainS(a);
+            if (!m.length) return;
+            const v =
+              pm == "w"
+                ? Math.max(...m.map((t) => +t.w))
+                : pm == "e"
+                  ? Math.max(...m.map((t) => (t.w > 0 ? t.w * (1 + t.r / 30) : 0)))
+                  : vol(a);
+            return { d: s.d, v: Math.round(v * 10) / 10 };
+          })
+          .filter(Boolean);
+        $("#v").innerHTML =
+          `<div class="card"><select onchange="px=this.value;render()">${xs.map((x) => `<option${x == px ? " selected" : ""}>${esc(x)}</option>`).join("")}</select><select onchange="pm=this.value;render()">${[
+            ["w", "Charge max (kg)"],
+            ["e", "1RM estimé (kg)"],
+            ["v", "Volume total (kg)"],
+          ]
+            .map((o) => `<option value="${o[0]}"${o[0] == pm ? " selected" : ""}>${o[1]}</option>`)
+            .join("")}</select>${chart(pts)}</div>`;
+      }
+      function chart(p) {
+        if (p.length < 2)
+          return `<p class="mu">${p.length ? "Une seule séance (" + nf(p[0].v) + "). Il en faut deux pour une courbe." : "Pas de données."}</p>`;
+        const W = 320,
+          H = 180,
+          m = 30,
+          vs = p.map((q) => q.v),
+          lo = Math.min(...vs),
+          hi = Math.max(...vs),
+          r = hi - lo || 1,
+          X = (i) => m + (i * (W - m - 10)) / (p.length - 1),
+          Y = (v) => H - 24 - ((v - lo) / r) * (H - 50),
+          dv = Math.round((vs[vs.length - 1] - vs[0]) * 10) / 10;
+        return `<svg viewBox="0 0 ${W} ${H}" width="100%"><polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${p.map((q, i) => X(i) + "," + Y(q.v)).join(" ")}"/>${p.map((q, i) => `<circle cx="${X(i)}" cy="${Y(q.v)}" r="3.5" fill="var(--ac)"/>`).join("")}<text x="${m}" y="12" class="t">max ${nf(hi)}</text><text x="${W - 10}" y="12" text-anchor="end" class="t">min ${nf(lo)}</text><text x="${m}" y="${H - 8}" class="t">${fd(p[0].d)}</text><text x="${W - 10}" y="${H - 8}" text-anchor="end" class="t">${fd(p[p.length - 1].d)}</text></svg><div class="mu">Évolution : ${dv >= 0 ? "+" : ""}${nf(dv)} sur ${p.length} séances</div>`;
+      }
+      init();
+    </script>
+  </body>
+</html>
