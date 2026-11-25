@@ -4,7 +4,6 @@ Application web de suivi de séances de musculation, pensée pour être utilisé
 
 Capture d'écran
 
-Démo : https://Torion69.github.io/muscu-tracker/
 
 Fonctionnalités
 Création d'une séance : date, nom, partenaire d'entraînement, exercices classés par groupe musculaire
